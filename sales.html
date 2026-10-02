@@ -109,8 +109,13 @@
         
         <form class="sales-form" onsubmit="submitSale(event)">
             <div class="form-group">
-                <label for="userName">שם המוכר/קונה:</label>
-                <input type="text" id="userName" placeholder="הכנס שם..." required>
+                <label for="sellerName">שם המוכר (משמרת):</label>
+                <input type="text" id="sellerName" placeholder="שם המוכר/ברמן..." required onchange="saveSellerName()">
+            </div>
+
+            <div class="form-group">
+                <label for="buyerName">שם הקונה:</label>
+                <input type="text" id="buyerName" placeholder="שם הקונה/חבר הקהילה..." required>
             </div>
 
             <div class="form-group">
@@ -140,7 +145,6 @@
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzoY4kOSv1dSt2zJA_MVYQcxGPkfokva_LjLvuPKDMLDibdN5WmotHmcEc-f6HK1h61/exec';
-    let productsList = [];
 
     function checkPassword(event) {
         event.preventDefault();
@@ -150,31 +154,43 @@
         if (passwordInput === correctPassword) {
             document.getElementById('login-card').style.display = 'none';
             document.getElementById('protected-content').style.display = 'block';
+            
+            // טעינת שם המוכר השמור אם קיים
+            if (localStorage.getItem('tuval_seller_name')) {
+                document.getElementById('sellerName').value = localStorage.getItem('tuval_seller_name');
+            }
+
             loadProducts();
         } else {
             document.getElementById('error-msg').style.display = 'block';
         }
     }
 
+    function saveSellerName() {
+        const sellerName = document.getElementById('sellerName').value;
+        localStorage.setItem('tuval_seller_name', sellerName);
+    }
+
+    // טעינת מוצרים באמצעות JSONP לפתרון בעיית ה-CORS
     function loadProducts() {
-        fetch(scriptURL)
-            .then(res => res.json())
-            .then(data => {
-                if (data.result === 'success') {
-                    productsList = data.products;
-                    const select = document.getElementById('productSelect');
-                    select.innerHTML = '<option value="" disabled selected>בחר מוצר...</option>';
-                    
-                    productsList.forEach(item => {
-                        const opt = document.createElement('option');
-                        opt.value = item.name;
-                        opt.textContent = `${item.name} (${item.price} ₪) - במלאי: ${item.stock}`;
-                        opt.dataset.price = item.price;
-                        select.appendChild(opt);
-                    });
-                }
-            })
-            .catch(err => console.error('שגיאה בטעינת מוצרים:', err));
+        const script = document.createElement('script');
+        script.src = `${scriptURL}?callback=handleProductsResponse`;
+        document.body.appendChild(script);
+    }
+
+    function handleProductsResponse(data) {
+        if (data.result === 'success') {
+            const select = document.getElementById('productSelect');
+            select.innerHTML = '<option value="" disabled selected>בחר מוצר...</option>';
+            
+            data.products.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.name;
+                opt.textContent = `${item.name} (${item.price} ₪) - במלאי: ${item.stock}`;
+                opt.dataset.price = item.price;
+                select.appendChild(opt);
+            });
+        }
     }
 
     function calculateTotal() {
@@ -204,7 +220,8 @@
         btn.disabled = true;
         btn.innerText = 'שולח...';
 
-        const name = document.getElementById('userName').value;
+        const sellerName = document.getElementById('sellerName').value;
+        const buyerName = document.getElementById('buyerName').value;
         const product = document.getElementById('productSelect').value;
         const quantity = document.getElementById('quantity').value;
         const totalPrice = document.getElementById('totalPriceDisplay').innerText;
@@ -214,7 +231,8 @@
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                name: name, 
+                sellerName: sellerName,
+                buyerName: buyerName,
                 product: product, 
                 quantity: quantity, 
                 totalPrice: totalPrice 
@@ -225,11 +243,13 @@
             btn.innerText = 'שלח עדכון';
             successMsg.style.display = 'block';
 
+            // איפוס שדות הקונה והמוצר (שם המוכר נשאר למשמרת)
+            document.getElementById('buyerName').value = '';
             document.getElementById('productSelect').selectedIndex = 0;
             document.getElementById('quantity').value = '1';
             calculateTotal();
             
-            // רענון רשימת המוצרים כדי להציג את המלאי המעודכן
+            // רענון המלאי המעודכן
             loadProducts();
         })
         .catch(error => {
