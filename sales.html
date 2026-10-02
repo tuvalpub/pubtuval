@@ -7,25 +7,24 @@
     <title>מכירות - פאב תובל</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* עיצוב ייעודי לטופס ההתחברות */
-        .login-form {
+        .login-form, .sales-form {
             display: flex;
             flex-direction: column;
             gap: 15px;
-            max-width: 300px;
+            max-width: 350px;
             margin: 20px auto 0 auto;
         }
 
-        .login-form input {
+        .login-form input, .sales-form input, .sales-form select {
             padding: 10px;
             font-size: 16px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            text-align: center;
+            box-sizing: border-box;
         }
 
-        .login-form button {
-            padding: 10px;
+        .login-form button, .sales-form button {
+            padding: 12px;
             font-size: 16px;
             background-color: #333;
             color: white;
@@ -35,7 +34,7 @@
             transition: background-color 0.2s;
         }
 
-        .login-form button:hover {
+        .login-form button:hover, .sales-form button:hover {
             background-color: #FFD700;
             color: #333;
         }
@@ -46,9 +45,35 @@
             display: none;
         }
 
-        /* הסתרת אזור התוכן המוגן כברירת מחדל */
+        .success-message {
+            color: green;
+            margin-top: 10px;
+            display: none;
+            font-weight: bold;
+        }
+
         #protected-content {
             display: none;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            text-align: right;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+        }
+
+        .price-summary {
+            font-size: 18px;
+            font-weight: bold;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -78,31 +103,141 @@
         <div id="error-msg" class="error-message">סיסמה שגויה, נסה שוב.</div>
     </div>
 
-    <!-- אזור תוכן מוגן (יוצג רק לאחר הזנת סיסמה נכונה) -->
-    <div id="protected-content" class="card">
-        <h2>מערכת מכירות</h2>
-        <p>
-            ברוכים הבאים למערכת המכירות המוגנת! כאן נוכל להוסיף את התוכן והטפסים שתבחר.
-        </p>
+    <!-- אזור תוכן מוגן - טופס מכירה -->
+    <div id="protected-content" class="card" style="text-align: center;">
+        <h2>מערכת רישום מכירות</h2>
+        
+        <form class="sales-form" onsubmit="submitSale(event)">
+            <div class="form-group">
+                <label for="userName">שם המוכר/קונה:</label>
+                <input type="text" id="userName" placeholder="הכנס שם..." required>
+            </div>
+
+            <div class="form-group">
+                <label for="productSelect">בחר מוצר מהמלאי:</label>
+                <select id="productSelect" onchange="calculateTotal()" required>
+                    <option value="" disabled selected>טוען מוצרים...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="quantity">כמות:</label>
+                <input type="number" id="quantity" value="1" min="1" oninput="calculateTotal()" required>
+            </div>
+
+            <div class="price-summary">
+                סה"כ לתשלום: <span id="totalPriceDisplay">0</span> ₪
+            </div>
+
+            <button type="submit" id="submitBtn">שלח עדכון</button>
+        </form>
+
+        <div id="status-success" class="success-message">העסקה נרשמה בהצלחה והמלאי עודכן!</div>
+        <div id="status-error" class="error-message">אירעה שגיאה בשליחת הנתונים. נסה שוב.</div>
     </div>
 
 </div>
 
 <script>
-    function checkPassword(event) {
-        event.preventDefault(); // מניעת רענון הדף בעת שליחת הטופס
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzoY4kOSv1dSt2zJA_MVYQcxGPkfokva_LjLvuPKDMLDibdN5WmotHmcEc-f6HK1h61/exec';
+    let productsList = [];
 
+    function checkPassword(event) {
+        event.preventDefault();
         const passwordInput = document.getElementById('password').value;
-        const correctPassword = "1234"; // אפשר לשנות את הסיסמה כאן
+        const correctPassword = "1234";
 
         if (passwordInput === correctPassword) {
-            // הסתרת מסך ההתחברות והצגת התוכן המוגן
             document.getElementById('login-card').style.display = 'none';
             document.getElementById('protected-content').style.display = 'block';
+            loadProducts();
         } else {
-            // הצגת הודעת שגיאה
             document.getElementById('error-msg').style.display = 'block';
         }
+    }
+
+    function loadProducts() {
+        fetch(scriptURL)
+            .then(res => res.json())
+            .then(data => {
+                if (data.result === 'success') {
+                    productsList = data.products;
+                    const select = document.getElementById('productSelect');
+                    select.innerHTML = '<option value="" disabled selected>בחר מוצר...</option>';
+                    
+                    productsList.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item.name;
+                        opt.textContent = `${item.name} (${item.price} ₪) - במלאי: ${item.stock}`;
+                        opt.dataset.price = item.price;
+                        select.appendChild(opt);
+                    });
+                }
+            })
+            .catch(err => console.error('שגיאה בטעינת מוצרים:', err));
+    }
+
+    function calculateTotal() {
+        const select = document.getElementById('productSelect');
+        const selectedOption = select.options[select.selectedIndex];
+        const quantity = parseInt(document.getElementById('quantity').value) || 0;
+        
+        if (selectedOption && selectedOption.dataset.price) {
+            const unitPrice = parseFloat(selectedOption.dataset.price);
+            const total = unitPrice * quantity;
+            document.getElementById('totalPriceDisplay').innerText = total;
+        } else {
+            document.getElementById('totalPriceDisplay').innerText = '0';
+        }
+    }
+
+    function submitSale(event) {
+        event.preventDefault();
+
+        const btn = document.getElementById('submitBtn');
+        const successMsg = document.getElementById('status-success');
+        const errorMsg = document.getElementById('status-error');
+
+        successMsg.style.display = 'none';
+        errorMsg.style.display = 'none';
+
+        btn.disabled = true;
+        btn.innerText = 'שולח...';
+
+        const name = document.getElementById('userName').value;
+        const product = document.getElementById('productSelect').value;
+        const quantity = document.getElementById('quantity').value;
+        const totalPrice = document.getElementById('totalPriceDisplay').innerText;
+
+        fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                name: name, 
+                product: product, 
+                quantity: quantity, 
+                totalPrice: totalPrice 
+            })
+        })
+        .then(() => {
+            btn.disabled = false;
+            btn.innerText = 'שלח עדכון';
+            successMsg.style.display = 'block';
+
+            document.getElementById('productSelect').selectedIndex = 0;
+            document.getElementById('quantity').value = '1';
+            calculateTotal();
+            
+            // רענון רשימת המוצרים כדי להציג את המלאי המעודכן
+            loadProducts();
+        })
+        .catch(error => {
+            console.error('Error!', error.message);
+            btn.disabled = false;
+            btn.innerText = 'שלח עדכון';
+            errorMsg.style.display = 'block';
+        });
     }
 </script>
 
