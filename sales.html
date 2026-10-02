@@ -6,6 +6,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מכירות - פאב תובל</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* עיצוב ייעודי לטופס ההתחברות */
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 300px;
+            margin: 20px auto 0 auto;
+        }
+
+        .login-form input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .login-form button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .login-form button:hover {
+            background-color: #FFD700;
+            color: #333;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* הסתרת אזור התוכן המוגן כברירת מחדל */
+        #protected-content {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
@@ -19,11 +64,47 @@
 </nav>
 
 <div class="section active">
-    <div class="card">
-        <h2>מערכת מכירות</h2>
-        <p>מסך המכירות יפותח בשלב הבא.</p>
+
+    <!-- מסך התחברות -->
+    <div id="login-card" class="card" style="text-align: center;">
+        <h2>כניסה למערכת המכירות</h2>
+        <p>יש להזין סיסמה כדי לגשת למערכת:</p>
+        
+        <form class="login-form" onsubmit="checkPassword(event)">
+            <input type="password" id="password" placeholder="הכנס סיסמה..." required>
+            <button type="submit">התחבר</button>
+        </form>
+        
+        <div id="error-msg" class="error-message">סיסמה שגויה, נסה שוב.</div>
     </div>
+
+    <!-- אזור תוכן מוגן (יוצג רק לאחר הזנת סיסמה נכונה) -->
+    <div id="protected-content" class="card">
+        <h2>מערכת מכירות</h2>
+        <p>
+            ברוכים הבאים למערכת המכירות המוגנת! כאן נוכל להוסיף את התוכן והטפסים שתבחר.
+        </p>
+    </div>
+
 </div>
+
+<script>
+    function checkPassword(event) {
+        event.preventDefault(); // מניעת רענון הדף בעת שליחת הטופס
+
+        const passwordInput = document.getElementById('password').value;
+        const correctPassword = "1234"; // אפשר לשנות את הסיסמה כאן
+
+        if (passwordInput === correctPassword) {
+            // הסתרת מסך ההתחברות והצגת התוכן המוגן
+            document.getElementById('login-card').style.display = 'none';
+            document.getElementById('protected-content').style.display = 'block';
+        } else {
+            // הצגת הודעת שגיאה
+            document.getElementById('error-msg').style.display = 'block';
+        }
+    }
+</script>
 
 </body>
 </html>
