@@ -1,81 +1,100 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>פאב תובל</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            direction: rtl;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>פאב תובל</title>
 
-        header {
-            background-color: #222;
-            padding: 15px;
-            color: white;
-            font-size: 22px;
-        }
+<style>
+body{
+    font-family:Arial,sans-serif;
+    text-align:center;
+    direction:rtl;
+    background:#f4f4f4;
+    margin:0;
+}
 
-        nav {
-            background-color: #333;
-            padding: 10px;
-        }
+header{
+    background:#222;
+    color:white;
+    padding:15px;
+}
 
-        nav a {
-            color: white;
-            margin: 0 15px;
-            text-decoration: none;
-            font-size: 18px;
-        }
+nav{
+    background:#333;
+    padding:10px;
+}
 
-        nav a:hover {
-            text-decoration: underline;
-        }
+nav a{
+    color:white;
+    text-decoration:none;
+    margin:0 15px;
+    font-size:18px;
+}
 
-        #logo {
-            margin-top: 30px;
-        }
+nav a:hover{
+    color:#FFD700;
+}
 
-        #logo img {
-            width: 300px;
-            max-width: 80%;
-            height: auto;
-        }
+#logo{
+    margin-top:30px;
+}
 
-        h1 {
-            margin-top: 20px;
-            font-size: 28px;
-        }
+#logo img{
+    width:350px;
+    max-width:90%;
+}
 
-        p {
-            font-size: 18px;
-            color: #555;
-        }
-    </style>
+.main{
+    max-width:1000px;
+    margin:auto;
+    padding:30px;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    margin-top:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+</style>
 </head>
+
 <body>
 
-    <header>
-        פאב תובל — מערכת ניהול
-    </header>
+<header>
+    <h1>פאב תובל</h1>
+</header>
 
-    <nav>
-        <a href="#">דף הבית</a>
-        <a href="#">לוח פעילויות</a>
-        <a href="#">מכירות</a>
-        <a href="#">התחברות</a>
-    </nav>
+<nav>
+    index.htmlדף הבית</a>
+    <alendar.htmlלוח אירועים</a>
+    <aוות</a>
+    #מכירות</a>
+</nav>
 
-    <div id="logo">
-        <img src="logo.jpeg" alt="Tuval Pub Logo">
+<div id="logo">
+    <img src="logo.jpeg" alt="פאב תובל">
+</div>
+
+<div class="main">
+
+    <div class="card">
+        <h2>ברוכים הבאים לפאב תובל</h2>
+
+        <p>
+            אתר הקהילה של פאב תובל.
+        </p>
+
+        <p>
+            כאן תוכלו לראות את הפעילויות הקרובות,
+            לעקוב אחרי אירועי הפאב,
+            ובהמשך גם לנהל מכירות ותורנויות.
+        </p>
     </div>
 
-    <h1>ברוכים הבאים לפאב תובל</h1>
-    <p>האתר בבנייה...</p>
+</div>
 
 </body>
 </html>
