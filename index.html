@@ -2,14 +2,10 @@
 <html lang="he" dir="rtl">
 
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>פאב תובל</title>
-
-styles.css
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פאב תובל</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -26,52 +22,39 @@ styles.css
 </nav>
 
 <div id="home" class="section active">
-
     <div class="card">
-
         <h2>ברוכים הבאים לפאב תובל</h2>
-
-        <p>
-            אתר הקהילה של פאב תובל.
-        </p>
-
+        <p>אתר הקהילה של פאב תובל.</p>
     </div>
-
 </div>
 
 <div id="calendar" class="section">
-
     <div class="card">
-
         <h2>לוח אירועים</h2>
-
         <iframe
             src="https://calendar.google.com/calendar/embed?src=tuvalpub%40gmail.com&ctz=Asia%2FJerusalem"
             style="height:800px;">
         </iframe>
-
     </div>
-
 </div>
 
 <div id="team" class="section">
-<iframe
+    <div class="card">
+        <h2>צוות</h2>
+        <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSxKP2yOknE6dJmyrXquFWspR6ZRrOAv0nAX9EQNjKiV9OeQkkHvC7d4B9bc8SXP5lrTHVsRPk4SmO7/pubhtml?gid=0&single=true&widget=true&headers=false"
             style="height:700px;">
         </iframe>
-
     </div>
-
 </div>
 
-<SelectorAll('.section').forEach(function(section){
+<script>
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(function(section){
         section.classList.remove('active');
     });
-
     document.getElementById(sectionId).classList.add('active');
-
 }
-
 </script>
 
 </body>
