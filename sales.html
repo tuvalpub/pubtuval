@@ -11,59 +11,23 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            max-width: 500px;
+            max-width: 550px;
             margin: 20px auto 0 auto;
         }
 
-        .login-form input, .sales-form input, .sales-form select {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-            width: 100%;
-            height: 42px;
-            background-color: #fff;
-        }
-
-        .login-form button, .btn {
-            padding: 10px 15px;
-            font-size: 16px;
-            background-color: #333;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .login-form button:hover, .btn:hover {
-            background-color: #FFD700;
-            color: #333;
-        }
-
-        .btn-add {
-            background-color: #28a745;
-            color: white;
-            margin-top: 10px;
-        }
-
-        .btn-add:hover {
-            background-color: #218838;
-            color: white;
-        }
-
         .error-message {
-            color: red;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .success-message {
-            color: green;
+            color: var(--accent-red);
             margin-top: 10px;
             display: none;
             font-weight: bold;
+        }
+
+        .success-message {
+            color: var(--accent-green);
+            margin-top: 10px;
+            display: none;
+            font-weight: bold;
+            font-size: 18px;
         }
 
         #protected-content {
@@ -74,53 +38,29 @@
             display: flex;
             flex-direction: column;
             text-align: right;
-            gap: 5px;
+            gap: 6px;
         }
 
         .form-group label {
             font-weight: bold;
-        }
-
-        /* עיצוב טבלת מלאי ועגלה */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            text-align: center;
-        }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
+            color: var(--primary-color);
         }
 
         .cart-section, .stock-section {
             margin-top: 30px;
-            border-top: 2px solid #eee;
-            padding-top: 15px;
-        }
-
-        .remove-btn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
+            border-top: 2px dashed #d5d0c5;
+            padding-top: 20px;
         }
 
         .grand-total {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             margin-top: 15px;
-            background: #e9ecef;
-            padding: 10px;
-            border-radius: 5px;
+            background: #f0ebe1;
+            color: var(--primary-color);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
         }
     </style>
 </head>
@@ -132,7 +72,7 @@
 </div>
 
 <nav>
-    <a href="index.html">חזרה לאתר</a>
+    <a href="index.html">חזרה לאתר הקהילה</a>
 </nav>
 
 <div class="section active">
@@ -140,33 +80,33 @@
     <!-- מסך התחברות -->
     <div id="login-card" class="card" style="text-align: center;">
         <h2>כניסה למערכת המכירות</h2>
-        <p>יש להזין סיסמה כדי לגשת למערכת:</p>
+        <p>יש להזין סיסמה כדי לגשת למערכת הבר המוגנת:</p>
         
         <form class="login-form" onsubmit="checkPassword(event)">
-            <input type="password" id="password" placeholder="הכנס סיסמה..." required>
-            <button type="submit">התחבר</button>
+            <input type="password" id="password" placeholder="הכנס סיסמה..." aria-label="סיסמה" required>
+            <button type="submit" class="btn">התחבר למערכת</button>
         </form>
         
         <div id="error-msg" class="error-message">סיסמה שגויה, נסה שוב.</div>
     </div>
 
-    <!-- אזור תוכן מוגן - טופס מכירה -->
-    <div id="protected-content" class="card" style="text-align: center;">
-        <h2>מערכת רישום מכירות</h2>
+    <!-- אזור מוגן - טופס מכירות וקופה -->
+    <div id="protected-content" class="card">
+        <h2 style="text-align: center; display: block;">קופת הפאב הקהילתי</h2>
         
         <form class="sales-form" onsubmit="submitSale(event)">
             <div class="form-group">
-                <label for="sellerName">שם המוכר (משמרת):</label>
-                <input type="text" id="sellerName" placeholder="שם המוכר/ברמן..." required onchange="saveSellerName()">
+                <label for="sellerName">שם המוכר/ת (משמרת):</label>
+                <input type="text" id="sellerName" placeholder="שם המוכר/ת..." required onchange="saveSellerName()">
             </div>
 
             <div class="form-group">
-                <label for="buyerName">שם הקונה:</label>
-                <input type="text" id="buyerName" placeholder="שם הקונה/חבר הקהילה..." required>
+                <label for="buyerName">שם הקונה (חבר/ת הקהילה):</label>
+                <input type="text" id="buyerName" placeholder="שם הקונה..." required>
             </div>
 
-            <div class="form-group" style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px;">
-                <label for="productSelect">בחר מוצר:</label>
+            <div class="form-group" style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px;">
+                <label for="productSelect">בחר מוצר מהמלאי:</label>
                 <select id="productSelect">
                     <option value="" disabled selected>טוען מוצרים...</option>
                 </select>
@@ -177,11 +117,11 @@
                 <input type="number" id="quantity" value="1" min="1">
             </div>
 
-            <button type="button" class="btn btn-add" onclick="addToCart()">+ הוסף לעגלה</button>
+            <button type="button" class="btn btn-add" onclick="addToCart()">+ הוסף לפנקס המכירות</button>
 
             <!-- סל קניות -->
             <div class="cart-section">
-                <h3>עגלת קניות</h3>
+                <h3>פנקס מכירה נוכחי</h3>
                 <table>
                     <thead>
                         <tr>
@@ -189,12 +129,12 @@
                             <th>כמות</th>
                             <th>מחיר יחידה</th>
                             <th>סה"כ</th>
-                            <th>הסר</th>
+                            <th>פעולה</th>
                         </tr>
                     </thead>
                     <tbody id="cartTableBody">
                         <tr>
-                            <td colspan="5">העגלה ריקה</td>
+                            <td colspan="5" style="text-align: center;">הפנקס ריק כרגע</td>
                         </tr>
                     </tbody>
                 </table>
@@ -204,26 +144,26 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn" id="submitBtn" style="margin-top: 20px; width: 100%;">שלח עסקה</button>
+            <button type="submit" class="btn" id="submitBtn" style="margin-top: 20px; width: 100%; font-size: 19px;">אישור ושליחת עסקה</button>
         </form>
 
-        <div id="status-success" class="success-message">העסקה נרשמה בהצלחה והמלאי עודכן!</div>
-        <div id="status-error" class="error-message">אירעה שגיאה בשליחת הנתונים. נסה שוב.</div>
+        <div id="status-success" class="success-message" style="text-align: center;">העסקה נרשמה בהצלחה והמלאי עודכן!</div>
+        <div id="status-error" class="error-message" style="text-align: center;">אירעה שגיאה בשליחת הנתונים. נסה שוב.</div>
 
         <!-- טבלת מלאי נוכחי -->
         <div class="stock-section">
-            <h3>מצב המלאי הנוכחי</h3>
+            <h3>מצב המלאי העדכני בבר</h3>
             <table>
                 <thead>
                     <tr>
                         <th>שם המוצר</th>
                         <th>מחיר</th>
-                        <th>כמות במלאי</th>
+                        <th>כמות נותרת</th>
                     </tr>
                 </thead>
                 <tbody id="stockTableBody">
                     <tr>
-                        <td colspan="3">טוען נתוני מלאי...</td>
+                        <td colspan="3" style="text-align: center;">טוען נתוני מלאי...</td>
                     </tr>
                 </tbody>
             </table>
@@ -272,16 +212,13 @@
         if (data.result === 'success') {
             productsList = data.products;
             
-            // עדכון ה-Select של המוצרים
             const select = document.getElementById('productSelect');
             select.innerHTML = '<option value="" disabled selected>בחר מוצר...</option>';
             
-            // עדכון טבלת המלאי
             const stockTbody = document.getElementById('stockTableBody');
             stockTbody.innerHTML = '';
 
             data.products.forEach(item => {
-                // אופציה לדרופדאון
                 const opt = document.createElement('option');
                 opt.value = item.name;
                 opt.textContent = `${item.name} (${item.price} ₪)`;
@@ -289,7 +226,6 @@
                 opt.dataset.stock = item.stock;
                 select.appendChild(opt);
 
-                // שורה בטבלת המלאי
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${item.name}</td>
@@ -319,7 +255,6 @@
         const productName = selectedOption.value;
         const unitPrice = parseFloat(selectedOption.dataset.price);
 
-        // בדיקה אם המוצר כבר קיים בעגלה
         const existingItem = cart.find(item => item.product === productName);
         if (existingItem) {
             existingItem.quantity += quantity;
@@ -333,7 +268,6 @@
             });
         }
 
-        // איפוס בחירה
         select.selectedIndex = 0;
         document.getElementById('quantity').value = '1';
 
@@ -350,7 +284,7 @@
         tbody.innerHTML = '';
 
         if (cart.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5">העגלה ריקה</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">הפנקס ריק כרגע</td></tr>';
             document.getElementById('grandTotalDisplay').innerText = '0';
             return;
         }
@@ -365,7 +299,7 @@
                 <td>${item.quantity}</td>
                 <td>${item.unitPrice} ₪</td>
                 <td>${item.totalPrice} ₪</td>
-                <td><button type="button" class="remove-btn" onclick="removeFromCart(${index})">X</button></td>
+                <td><button type="button" class="remove-btn" onclick="removeFromCart(${index})">הסר</button></td>
             `;
             tbody.appendChild(tr);
         });
@@ -377,7 +311,7 @@
         event.preventDefault();
 
         if (cart.length === 0) {
-            alert('עגלת הקניות ריקה! הוסף מוצרים לפני שליחה.');
+            alert('הפנקס ריק! הוסף מוצרים לפני שליחה.');
             return;
         }
 
@@ -406,21 +340,19 @@
         })
         .then(() => {
             btn.disabled = false;
-            btn.innerText = 'שלח עסקה';
+            btn.innerText = 'אישור ושליחת עסקה';
             successMsg.style.display = 'block';
 
-            // איפוס עגלה ושם קונה
             cart = [];
             renderCart();
             document.getElementById('buyerName').value = '';
             
-            // רענון נתוני מלאי מחדש
             loadProducts();
         })
         .catch(error => {
             console.error('Error!', error.message);
             btn.disabled = false;
-            btn.innerText = 'שלח עסקה';
+            btn.innerText = 'אישור ושליחת עסקה';
             errorMsg.style.display = 'block';
         });
     }
