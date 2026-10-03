@@ -80,14 +80,23 @@
     <!-- מסך התחברות -->
     <div id="login-card" class="card" style="text-align: center;">
         <h2>כניסה למערכת המכירות</h2>
-        <p>יש להזין סיסמה כדי לגשת למערכת הבר המוגנת:</p>
+        <p>יש להזין שם משתמש וסיסמה מורשים:</p>
         
-        <form class="login-form" onsubmit="checkPassword(event)">
-            <input type="password" id="password" placeholder="הכנס סיסמה..." aria-label="סיסמה" required>
-            <button type="submit" class="btn">התחבר למערכת</button>
+        <form class="login-form" onsubmit="checkLogin(event)">
+            <div class="form-group">
+                <label for="usernameInput">שם משתמש:</label>
+                <input type="text" id="usernameInput" placeholder="הכנס שם משתמש..." required>
+            </div>
+            
+            <div class="form-group">
+                <label for="passwordInput">סיסמה:</label>
+                <input type="password" id="passwordInput" placeholder="הכנס סיסמה..." required>
+            </div>
+
+            <button type="submit" class="btn" id="loginBtn">התחבר למערכת</button>
         </form>
         
-        <div id="error-msg" class="error-message">סיסמה שגויה, נסה שוב.</div>
+        <div id="error-msg" class="error-message">שם משתמש או סיסמה שגויים. נסה שוב.</div>
     </div>
 
     <!-- אזור מוגן - טופס מכירות וקופה -->
@@ -97,7 +106,7 @@
         <form class="sales-form" onsubmit="submitSale(event)">
             <div class="form-group">
                 <label for="sellerName">שם המוכר/ת (משמרת):</label>
-                <input type="text" id="sellerName" placeholder="שם המוכר/ת..." required onchange="saveSellerName()">
+                <input type="text" id="sellerName" readonly style="background-color: #e9ecef; cursor: not-allowed;">
             </div>
 
             <div class="form-group">
@@ -178,28 +187,47 @@
     let productsList = [];
     let cart = [];
 
-    function checkPassword(event) {
+    function checkLogin(event) {
         event.preventDefault();
-        const passwordInput = document.getElementById('password').value;
-        const correctPassword = "1234";
+        const username = document.getElementById('usernameInput').value;
+        const password = document.getElementById('passwordInput').value;
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMsg = document.getElementById('error-msg');
 
-        if (passwordInput === correctPassword) {
-            document.getElementById('login-card').style.display = 'none';
-            document.getElementById('protected-content').style.display = 'block';
-            
-            if (localStorage.getItem('tuval_seller_name')) {
-                document.getElementById('sellerName').value = localStorage.getItem('tuval_seller_name');
+        errorMsg.style.display = 'none';
+        loginBtn.disabled = true;
+        loginBtn.innerText = 'בודק נתונים...';
+
+        fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+                action: 'login',
+                username: username,
+                password: password
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            loginBtn.disabled = false;
+            loginBtn.innerText = 'התחבר למערכת';
+
+            if (data.result === 'success') {
+                document.getElementById('login-card').style.display = 'none';
+                document.getElementById('protected-content').style.display = 'block';
+                document.getElementById('sellerName').value = data.username;
+
+                loadProducts();
+            } else {
+                errorMsg.style.display = 'block';
             }
-
-            loadProducts();
-        } else {
-            document.getElementById('error-msg').style.display = 'block';
-        }
-    }
-
-    function saveSellerName() {
-        const sellerName = document.getElementById('sellerName').value;
-        localStorage.setItem('tuval_seller_name', sellerName);
+        })
+        .catch(err => {
+            console.error('Login error:', err);
+            loginBtn.disabled = false;
+            loginBtn.innerText = 'התחבר למערכת';
+            errorMsg.style.display = 'block';
+        });
     }
 
     function loadProducts() {
@@ -330,27 +358,31 @@
 
         fetch(scriptURL, {
             method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ 
+                action: 'sale',
                 sellerName: sellerName,
                 buyerName: buyerName,
                 items: cart
             })
         })
-        .then(() => {
+        .then(res => res.json())
+        .then(data => {
             btn.disabled = false;
             btn.innerText = 'אישור ושליחת עסקה';
-            successMsg.style.display = 'block';
 
-            cart = [];
-            renderCart();
-            document.getElementById('buyerName').value = '';
-            
-            loadProducts();
+            if (data.result === 'success') {
+                successMsg.style.display = 'block';
+                cart = [];
+                renderCart();
+                document.getElementById('buyerName').value = '';
+                loadProducts();
+            } else {
+                errorMsg.style.display = 'block';
+            }
         })
         .catch(error => {
-            console.error('Error!', error.message);
+            console.error('Error!', error);
             btn.disabled = false;
             btn.innerText = 'אישור ושליחת עסקה';
             errorMsg.style.display = 'block';
