@@ -11,7 +11,7 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            max-width: 350px;
+            max-width: 500px;
             margin: 20px auto 0 auto;
         }
 
@@ -26,8 +26,8 @@
             background-color: #fff;
         }
 
-        .login-form button, .sales-form button {
-            padding: 12px;
+        .login-form button, .btn {
+            padding: 10px 15px;
             font-size: 16px;
             background-color: #333;
             color: white;
@@ -37,9 +37,20 @@
             transition: background-color 0.2s;
         }
 
-        .login-form button:hover, .sales-form button:hover {
+        .login-form button:hover, .btn:hover {
             background-color: #FFD700;
             color: #333;
+        }
+
+        .btn-add {
+            background-color: #28a745;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-add:hover {
+            background-color: #218838;
+            color: white;
         }
 
         .error-message {
@@ -70,13 +81,46 @@
             font-weight: bold;
         }
 
-        .price-summary {
-            font-size: 18px;
+        /* עיצוב טבלת מלאי ועגלה */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
             font-weight: bold;
-            background: #f0f0f0;
+        }
+
+        .cart-section, .stock-section {
+            margin-top: 30px;
+            border-top: 2px solid #eee;
+            padding-top: 15px;
+        }
+
+        .remove-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .grand-total {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+            background: #e9ecef;
             padding: 10px;
             border-radius: 5px;
-            margin-top: 5px;
         }
     </style>
 </head>
@@ -121,33 +165,78 @@
                 <input type="text" id="buyerName" placeholder="שם הקונה/חבר הקהילה..." required>
             </div>
 
-            <div class="form-group">
-                <label for="productSelect">בחר מוצר מהמלאי:</label>
-                <select id="productSelect" onchange="calculateTotal()" required>
+            <div class="form-group" style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px;">
+                <label for="productSelect">בחר מוצר:</label>
+                <select id="productSelect">
                     <option value="" disabled selected>טוען מוצרים...</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="quantity">כמות:</label>
-                <input type="number" id="quantity" value="1" min="1" oninput="calculateTotal()" required>
+                <input type="number" id="quantity" value="1" min="1">
             </div>
 
-            <div class="price-summary">
-                סה"כ לתשלום: <span id="totalPriceDisplay">0</span> ₪
+            <button type="button" class="btn btn-add" onclick="addToCart()">+ הוסף לעגלה</button>
+
+            <!-- סל קניות -->
+            <div class="cart-section">
+                <h3>עגלת קניות</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>מוצר</th>
+                            <th>כמות</th>
+                            <th>מחיר יחידה</th>
+                            <th>סה"כ</th>
+                            <th>הסר</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartTableBody">
+                        <tr>
+                            <td colspan="5">העגלה ריקה</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="grand-total">
+                    סה"כ לתשלום: <span id="grandTotalDisplay">0</span> ₪
+                </div>
             </div>
 
-            <button type="submit" id="submitBtn">שלח עדכון</button>
+            <button type="submit" class="btn" id="submitBtn" style="margin-top: 20px; width: 100%;">שלח עסקה</button>
         </form>
 
         <div id="status-success" class="success-message">העסקה נרשמה בהצלחה והמלאי עודכן!</div>
         <div id="status-error" class="error-message">אירעה שגיאה בשליחת הנתונים. נסה שוב.</div>
+
+        <!-- טבלת מלאי נוכחי -->
+        <div class="stock-section">
+            <h3>מצב המלאי הנוכחי</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>שם המוצר</th>
+                        <th>מחיר</th>
+                        <th>כמות במלאי</th>
+                    </tr>
+                </thead>
+                <tbody id="stockTableBody">
+                    <tr>
+                        <td colspan="3">טוען נתוני מלאי...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzoY4kOSv1dSt2zJA_MVYQcxGPkfokva_LjLvuPKDMLDibdN5WmotHmcEc-f6HK1h61/exec';
+    
+    let productsList = [];
+    let cart = [];
 
     function checkPassword(event) {
         event.preventDefault();
@@ -181,35 +270,116 @@
 
     function handleProductsResponse(data) {
         if (data.result === 'success') {
+            productsList = data.products;
+            
+            // עדכון ה-Select של המוצרים
             const select = document.getElementById('productSelect');
             select.innerHTML = '<option value="" disabled selected>בחר מוצר...</option>';
             
+            // עדכון טבלת המלאי
+            const stockTbody = document.getElementById('stockTableBody');
+            stockTbody.innerHTML = '';
+
             data.products.forEach(item => {
+                // אופציה לדרופדאון
                 const opt = document.createElement('option');
                 opt.value = item.name;
-                opt.textContent = `${item.name} (${item.price} ₪) - במלאי: ${item.stock}`;
+                opt.textContent = `${item.name} (${item.price} ₪)`;
                 opt.dataset.price = item.price;
+                opt.dataset.stock = item.stock;
                 select.appendChild(opt);
+
+                // שורה בטבלת המלאי
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.price} ₪</td>
+                    <td><strong>${item.stock}</strong></td>
+                `;
+                stockTbody.appendChild(tr);
             });
         }
     }
 
-    function calculateTotal() {
+    function addToCart() {
         const select = document.getElementById('productSelect');
         const selectedOption = select.options[select.selectedIndex];
         const quantity = parseInt(document.getElementById('quantity').value) || 0;
-        
-        if (selectedOption && selectedOption.dataset.price) {
-            const unitPrice = parseFloat(selectedOption.dataset.price);
-            const total = unitPrice * quantity;
-            document.getElementById('totalPriceDisplay').innerText = total;
-        } else {
-            document.getElementById('totalPriceDisplay').innerText = '0';
+
+        if (!selectedOption || !selectedOption.value) {
+            alert('אנא בחר מוצר מהרשימה');
+            return;
         }
+
+        if (quantity <= 0) {
+            alert('אנא הכנס כמות תקינה');
+            return;
+        }
+
+        const productName = selectedOption.value;
+        const unitPrice = parseFloat(selectedOption.dataset.price);
+
+        // בדיקה אם המוצר כבר קיים בעגלה
+        const existingItem = cart.find(item => item.product === productName);
+        if (existingItem) {
+            existingItem.quantity += quantity;
+            existingItem.totalPrice = existingItem.quantity * unitPrice;
+        } else {
+            cart.push({
+                product: productName,
+                quantity: quantity,
+                unitPrice: unitPrice,
+                totalPrice: quantity * unitPrice
+            });
+        }
+
+        // איפוס בחירה
+        select.selectedIndex = 0;
+        document.getElementById('quantity').value = '1';
+
+        renderCart();
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        renderCart();
+    }
+
+    function renderCart() {
+        const tbody = document.getElementById('cartTableBody');
+        tbody.innerHTML = '';
+
+        if (cart.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5">העגלה ריקה</td></tr>';
+            document.getElementById('grandTotalDisplay').innerText = '0';
+            return;
+        }
+
+        let grandTotal = 0;
+
+        cart.forEach((item, index) => {
+            grandTotal += item.totalPrice;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.product}</td>
+                <td>${item.quantity}</td>
+                <td>${item.unitPrice} ₪</td>
+                <td>${item.totalPrice} ₪</td>
+                <td><button type="button" class="remove-btn" onclick="removeFromCart(${index})">X</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('grandTotalDisplay').innerText = grandTotal;
     }
 
     function submitSale(event) {
         event.preventDefault();
+
+        if (cart.length === 0) {
+            alert('עגלת הקניות ריקה! הוסף מוצרים לפני שליחה.');
+            return;
+        }
 
         const btn = document.getElementById('submitBtn');
         const successMsg = document.getElementById('status-success');
@@ -223,9 +393,6 @@
 
         const sellerName = document.getElementById('sellerName').value;
         const buyerName = document.getElementById('buyerName').value;
-        const product = document.getElementById('productSelect').value;
-        const quantity = document.getElementById('quantity').value;
-        const totalPrice = document.getElementById('totalPriceDisplay').innerText;
 
         fetch(scriptURL, {
             method: 'POST',
@@ -234,27 +401,26 @@
             body: JSON.stringify({ 
                 sellerName: sellerName,
                 buyerName: buyerName,
-                product: product, 
-                quantity: quantity, 
-                totalPrice: totalPrice 
+                items: cart
             })
         })
         .then(() => {
             btn.disabled = false;
-            btn.innerText = 'שלח עדכון';
+            btn.innerText = 'שלח עסקה';
             successMsg.style.display = 'block';
 
+            // איפוס עגלה ושם קונה
+            cart = [];
+            renderCart();
             document.getElementById('buyerName').value = '';
-            document.getElementById('productSelect').selectedIndex = 0;
-            document.getElementById('quantity').value = '1';
-            calculateTotal();
             
+            // רענון נתוני מלאי מחדש
             loadProducts();
         })
         .catch(error => {
             console.error('Error!', error.message);
             btn.disabled = false;
-            btn.innerText = 'שלח עדכון';
+            btn.innerText = 'שלח עסקה';
             errorMsg.style.display = 'block';
         });
     }
