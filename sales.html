@@ -338,7 +338,7 @@
         document.getElementById('grandTotalDisplay').innerText = grandTotal;
     }
 
-    function submitSale(event) {
+        function submitSale(event) {
         event.preventDefault();
 
         if (cart.length === 0) {
@@ -379,6 +379,8 @@
                 cart = [];
                 renderCart();
                 document.getElementById('buyerName').value = '';
+                
+                // רענון נתוני המלאי והצגת הכמויות המעודכנות בטבלה
                 loadProducts();
             } else {
                 errorMsg.style.display = 'block';
