@@ -16,14 +16,14 @@
         }
 
         .error-message {
-            color: var(--accent-red);
+            color: var(--accent-red, #c0392b);
             margin-top: 10px;
             display: none;
             font-weight: bold;
         }
 
         .success-message {
-            color: var(--accent-green);
+            color: var(--accent-green, #27ae60);
             margin-top: 10px;
             display: none;
             font-weight: bold;
@@ -43,7 +43,7 @@
 
         .form-group label {
             font-weight: bold;
-            color: var(--primary-color);
+            color: var(--primary-color, #2c4a3e);
         }
 
         .cart-section, .stock-section {
@@ -57,7 +57,7 @@
             font-weight: bold;
             margin-top: 15px;
             background: #f0ebe1;
-            color: var(--primary-color);
+            color: var(--primary-color, #2c4a3e);
             padding: 12px;
             border-radius: 8px;
             text-align: center;
@@ -187,7 +187,7 @@
     let productsList = [];
     let cart = [];
 
-        function checkLogin(event) {
+    function checkLogin(event) {
         event.preventDefault();
         const username = document.getElementById('usernameInput').value;
         const password = document.getElementById('passwordInput').value;
@@ -198,14 +198,14 @@
         loginBtn.disabled = true;
         loginBtn.innerText = 'בודק נתונים...';
 
+        const formData = new URLSearchParams();
+        formData.append('action', 'login');
+        formData.append('username', username);
+        formData.append('password', password);
+
         fetch(scriptURL, {
             method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({
-                action: 'login',
-                username: username,
-                password: password
-            })
+            body: formData
         })
         .then(res => res.json())
         .then(data => {
@@ -215,9 +215,7 @@
             if (data.result === 'success') {
                 document.getElementById('login-card').style.display = 'none';
                 document.getElementById('protected-content').style.display = 'block';
-                
-                // שימוש בשם המשתמש שהוחזר או בשם שהוזן בטופס אם חסר
-                document.getElementById('sellerName').value = data.username || username;
+                document.getElementById('sellerName').value = data.username;
 
                 loadProducts();
             } else {
@@ -231,7 +229,6 @@
             errorMsg.style.display = 'block';
         });
     }
-
 
     function loadProducts() {
         const script = document.createElement('script');
@@ -338,7 +335,7 @@
         document.getElementById('grandTotalDisplay').innerText = grandTotal;
     }
 
-        function submitSale(event) {
+    function submitSale(event) {
         event.preventDefault();
 
         if (cart.length === 0) {
@@ -359,15 +356,15 @@
         const sellerName = document.getElementById('sellerName').value;
         const buyerName = document.getElementById('buyerName').value;
 
+        const formData = new URLSearchParams();
+        formData.append('action', 'sale');
+        formData.append('sellerName', sellerName);
+        formData.append('buyerName', buyerName);
+        formData.append('items', JSON.stringify(cart));
+
         fetch(scriptURL, {
             method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ 
-                action: 'sale',
-                sellerName: sellerName,
-                buyerName: buyerName,
-                items: cart
-            })
+            body: formData
         })
         .then(res => res.json())
         .then(data => {
@@ -380,7 +377,6 @@
                 renderCart();
                 document.getElementById('buyerName').value = '';
                 
-                // רענון נתוני המלאי והצגת הכמויות המעודכנות בטבלה
                 loadProducts();
             } else {
                 errorMsg.style.display = 'block';
