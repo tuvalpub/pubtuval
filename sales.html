@@ -110,8 +110,11 @@
             </div>
 
             <div class="form-group">
-                <label for="buyerName">שם הקונה (חבר/ת הקהילה):</label>
-                <input type="text" id="buyerName" placeholder="שם הקונה..." required>
+                <label for="buyerName">שם הקונה (חבר/ת אגודה):</label>
+                <input type="text" id="buyerName" list="membersList" placeholder="הקלד שם לחיפוש..." autocomplete="off" required>
+                <datalist id="membersList">
+                    <!-- הרשימה תטען אוטומטית מהגיליון -->
+                </datalist>
             </div>
 
             <div class="form-group" style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px;">
@@ -185,6 +188,7 @@
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzoY4kOSv1dSt2zJA_MVYQcxGPkfokva_LjLvuPKDMLDibdN5WmotHmcEc-f6HK1h61/exec';
     
     let productsList = [];
+    let membersListArray = [];
     let cart = [];
 
     function checkLogin(event) {
@@ -217,7 +221,7 @@
                 document.getElementById('protected-content').style.display = 'block';
                 document.getElementById('sellerName').value = data.username;
 
-                loadProducts();
+                loadData();
             } else {
                 errorMsg.style.display = 'block';
             }
@@ -230,16 +234,27 @@
         });
     }
 
-    function loadProducts() {
+    function loadData() {
         const script = document.createElement('script');
-        script.src = `${scriptURL}?callback=handleProductsResponse&t=${new Date().getTime()}`;
+        script.src = `${scriptURL}?callback=handleDataResponse&t=${new Date().getTime()}`;
         document.body.appendChild(script);
     }
 
-    function handleProductsResponse(data) {
+    function handleDataResponse(data) {
         if (data.result === 'success') {
             productsList = data.products;
+            membersListArray = data.members || [];
             
+            // 1. טעינת רשימת חברי אגודה
+            const datalist = document.getElementById('membersList');
+            datalist.innerHTML = '';
+            membersListArray.forEach(member => {
+                const opt = document.createElement('option');
+                opt.value = member;
+                datalist.appendChild(opt);
+            });
+
+            // 2. טעינת מוצרים ומלאי
             const select = document.getElementById('productSelect');
             select.innerHTML = '<option value="" disabled selected>בחר מוצר...</option>';
             
@@ -338,6 +353,14 @@
     function submitSale(event) {
         event.preventDefault();
 
+        const buyerName = document.getElementById('buyerName').value.trim();
+
+        // בדיקה שהקונה מופיע ברשימת חברי האגודה המאושרים
+        if (!membersListArray.includes(buyerName)) {
+            alert('שם הקונה אינו מופיע ברשימת חברי האגודה המאושרים. אנא בחר שם מתוך הרשימה המוצעת.');
+            return;
+        }
+
         if (cart.length === 0) {
             alert('הפנקס ריק! הוסף מוצרים לפני שליחה.');
             return;
@@ -354,7 +377,6 @@
         btn.innerText = 'שולח...';
 
         const sellerName = document.getElementById('sellerName').value;
-        const buyerName = document.getElementById('buyerName').value;
 
         const formData = new URLSearchParams();
         formData.append('action', 'sale');
@@ -377,7 +399,7 @@
                 renderCart();
                 document.getElementById('buyerName').value = '';
                 
-                loadProducts();
+                loadData();
             } else {
                 errorMsg.style.display = 'block';
             }
