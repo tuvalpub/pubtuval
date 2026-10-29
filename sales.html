@@ -101,7 +101,10 @@
 
     <!-- אזור מוגן - טופס מכירות וקופה -->
     <div id="protected-content" class="card">
-        <h2 style="text-align: center; display: block;">קופת הפאב הקהילתי</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <h2 style="margin: 0;">קופת הפאב הקהילתי</h2>
+            <button type="button" class="btn btn-add" id="reportBtn" onclick="generateMonthlyReport()">📊 הורד דוח חודשי (CSV)</button>
+        </div>
         
         <form class="sales-form" onsubmit="submitSale(event)">
             <div class="form-group">
@@ -410,6 +413,57 @@
             btn.innerText = 'אישור ושליחת עסקה';
             errorMsg.style.display = 'block';
         });
+    }
+
+    function generateMonthlyReport() {
+        const reportBtn = document.getElementById('reportBtn');
+        const originalText = reportBtn.innerText;
+        reportBtn.disabled = true;
+        reportBtn.innerText = 'מפיק דוח...';
+
+        fetch(`${scriptURL}?action=monthlyReport&t=${new Date().getTime()}`)
+            .then(res => res.json())
+            .then(data => {
+                reportBtn.disabled = false;
+                reportBtn.innerText = originalText;
+
+                if (data.result === 'success' && data.reportData) {
+                    downloadCSV(data.reportData);
+                } else {
+                    alert('אירעה שגיאה בהפקת הדוח או שאין נתונים לחודש זה.');
+                }
+            })
+            .catch(err => {
+                console.error('Error generating report:', err);
+                reportBtn.disabled = false;
+                reportBtn.innerText = originalText;
+                alert('אירעה שגיאה בתקשורת עם השרת.');
+            });
+    }
+
+    function downloadCSV(data) {
+        let csvContent = "שם חבר אגודה,מספר חשבון בכרטסת,סה\"כ לתשלום (₪)\n";
+
+        data.forEach(row => {
+            const name = `"${(row.buyerName || '').toString().replace(/"/g, '""')}"`;
+            const accountNumber = `"${(row.accountNumber || '').toString().replace(/"/g, '""')}"`;
+            const totalAmount = row.totalAmount || 0;
+            
+            csvContent += `${name},${accountNumber},${totalAmount}\n`;
+        });
+
+        const BOM = "\uFEFF";
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        
+        const link = document.createElement("a");
+        const now = new Date();
+        const monthYear = `${now.getMonth() + 1}-${now.getFullYear()}`;
+        
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", `דוח_מכירות_חודשי_${monthYear}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 
