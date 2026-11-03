@@ -62,6 +62,18 @@
             border-radius: 8px;
             text-align: center;
         }
+
+        .report-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .report-section select {
+            width: auto;
+            padding: 8px 12px;
+        }
     </style>
 </head>
 
@@ -101,9 +113,16 @@
 
     <!-- אזור מוגן - טופס מכירות וקופה -->
     <div id="protected-content" class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
             <h2 style="margin: 0;">קופת הפאב הקהילתי</h2>
-            <button type="button" class="btn btn-add" id="reportBtn" onclick="generateMonthlyReport()">📊 הורד דוח חודשי (CSV)</button>
+            
+            <!-- סקציית הפקת דוח חודשי לפי חודש נבחר -->
+            <div class="report-section">
+                <select id="reportMonthSelect">
+                    <option value="">טוען חודשים...</option>
+                </select>
+                <button type="button" class="btn btn-add" id="reportBtn" onclick="generateMonthlyReport()">📊 הורד דוח (CSV)</button>
+            </div>
         </div>
         
         <form class="sales-form" onsubmit="submitSale(event)">
@@ -225,6 +244,7 @@
                 document.getElementById('sellerName').value = data.username;
 
                 loadData();
+                loadAvailableMonths();
             } else {
                 errorMsg.style.display = 'block';
             }
@@ -241,6 +261,37 @@
         const script = document.createElement('script');
         script.src = `${scriptURL}?callback=handleDataResponse&t=${new Date().getTime()}`;
         document.body.appendChild(script);
+    }
+
+    function loadAvailableMonths() {
+        const script = document.createElement('script');
+        script.src = `${scriptURL}?action=getAvailableMonths&callback=handleMonthsResponse&t=${new Date().getTime()}`;
+        document.body.appendChild(script);
+    }
+
+    function handleMonthsResponse(data) {
+        if (data.result === 'success' && data.months) {
+            const select = document.getElementById('reportMonthSelect');
+            select.innerHTML = '';
+
+            if (data.months.length === 0) {
+                select.innerHTML = '<option value="">אין חודשים זמינים</option>';
+                return;
+            }
+
+            data.months.forEach(ym => {
+                const parts = ym.split('-');
+                const year = parts[0];
+                const month = parts[1];
+                const monthNames = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
+                const label = `${monthNames[parseInt(month, 10) - 1]} ${year}`;
+                
+                const opt = document.createElement('option');
+                opt.value = ym; // לדוגמה "2026-03"
+                opt.textContent = label;
+                select.appendChild(opt);
+            });
+        }
     }
 
     function handleDataResponse(data) {
@@ -403,6 +454,7 @@
                 document.getElementById('buyerName').value = '';
                 
                 loadData();
+                loadAvailableMonths();
             } else {
                 errorMsg.style.display = 'block';
             }
@@ -416,19 +468,27 @@
     }
 
     function generateMonthlyReport() {
+        const monthSelect = document.getElementById('reportMonthSelect');
+        const selectedMonthYear = monthSelect.value;
+
+        if (!selectedMonthYear) {
+            alert('אנא בחר חודש מהרשימה.');
+            return;
+        }
+
         const reportBtn = document.getElementById('reportBtn');
         const originalText = reportBtn.innerText;
         reportBtn.disabled = true;
         reportBtn.innerText = 'מפיק דוח...';
 
-        fetch(`${scriptURL}?action=monthlyReport&t=${new Date().getTime()}`)
+        fetch(`${scriptURL}?action=monthlyReport&monthYear=${selectedMonthYear}&t=${new Date().getTime()}`)
             .then(res => res.json())
             .then(data => {
                 reportBtn.disabled = false;
                 reportBtn.innerText = originalText;
 
                 if (data.result === 'success' && data.reportData) {
-                    downloadCSV(data.reportData);
+                    downloadCSV(data.reportData, selectedMonthYear);
                 } else {
                     alert('אירעה שגיאה בהפקת הדוח או שאין נתונים לחודש זה.');
                 }
@@ -441,7 +501,7 @@
             });
     }
 
-    function downloadCSV(data) {
+    function downloadCSV(data, monthYearKey) {
         let csvContent = "שם חבר אגודה,מספר חשבון בכרטסת,סה\"כ לתשלום (₪)\n";
 
         data.forEach(row => {
@@ -456,11 +516,8 @@
         const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
         
         const link = document.createElement("a");
-        const now = new Date();
-        const monthYear = `${now.getMonth() + 1}-${now.getFullYear()}`;
-        
         link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", `דוח_מכירות_חודשי_${monthYear}.csv`);
+        link.setAttribute("download", `דוח_מכירות_חודשי_${monthYearKey}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
