@@ -133,7 +133,14 @@
 
             <div class="form-group">
                 <label for="buyerName">שם הקונה (חבר/ת אגודה):</label>
-                <input type="text" id="buyerName" list="membersList" placeholder="הקלד שם לחיפוש..." autocomplete="off" required>
+                <input type="text" 
+                       id="buyerName" 
+                       list="membersList" 
+                       placeholder="הקלד שם לחיפוש..." 
+                       autocomplete="off" 
+                       autocorrect="off" 
+                       spellcheck="false" 
+                       required>
                 <datalist id="membersList">
                     <!-- הרשימה תטען אוטומטית מהגיליון -->
                 </datalist>
@@ -287,7 +294,7 @@
                 const label = `${monthNames[parseInt(month, 10) - 1]} ${year}`;
                 
                 const opt = document.createElement('option');
-                opt.value = ym; // לדוגמה "2026-03"
+                opt.value = ym;
                 opt.textContent = label;
                 select.appendChild(opt);
             });
