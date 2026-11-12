@@ -52,15 +52,56 @@
             padding-top: 20px;
         }
 
-        .grand-total {
-            font-size: 22px;
-            font-weight: bold;
+        .discount-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #faf8f5;
+            border: 1px solid #e0dcd3;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .discount-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .discount-controls select {
+            width: 45%;
+        }
+
+        .discount-controls input {
+            width: 55%;
+        }
+
+        .totals-summary {
             margin-top: 15px;
             background: #f0ebe1;
             color: var(--primary-color, #2c4a3e);
-            padding: 12px;
+            padding: 15px;
             border-radius: 8px;
             text-align: center;
+        }
+
+        .subtotal-line {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .discount-line {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: var(--accent-red, #c0392b);
+            font-weight: bold;
+        }
+
+        .grand-total {
+            font-size: 22px;
+            font-weight: bold;
         }
 
         .report-section {
@@ -180,8 +221,36 @@
                     </tbody>
                 </table>
 
-                <div class="grand-total">
-                    סה"כ לתשלום: <span id="grandTotalDisplay">0</span> ₪
+                <!-- אזור הנחה -->
+                <div class="discount-box">
+                    <label style="font-weight: bold; color: var(--primary-color, #2c4a3e);">מתן הנחה (אופציונלי):</label>
+                    <div class="discount-controls">
+                        <select id="discountType" onchange="onDiscountTypeChange()">
+                            <option value="percent">אחוזים (%)</option>
+                            <option value="amount">סכום קבוע (₪)</option>
+                        </select>
+                        <input type="number" 
+                               id="discountValue" 
+                               value="0" 
+                               min="0" 
+                               max="100" 
+                               step="any" 
+                               placeholder="הזן ערך הנחה..." 
+                               oninput="renderCart()">
+                    </div>
+                </div>
+
+                <!-- סיכום מחירים -->
+                <div class="totals-summary">
+                    <div id="subtotalRow" class="subtotal-line" style="display: none;">
+                        סכום ביניים: <span id="subtotalDisplay">0</span> ₪
+                    </div>
+                    <div id="discountRow" class="discount-line" style="display: none;">
+                        הנחה: -<span id="discountDisplay">0</span> ₪
+                    </div>
+                    <div class="grand-total">
+                        סה"כ לתשלום: <span id="grandTotalDisplay">0</span> ₪
+                    </div>
                 </div>
             </div>
 
@@ -383,20 +452,70 @@
         renderCart();
     }
 
+    function onDiscountTypeChange() {
+        const discountInput = document.getElementById('discountValue');
+        discountInput.value = '0';
+        renderCart();
+    }
+
+    function calculateTotals() {
+        let subtotal = 0;
+        cart.forEach(item => {
+            subtotal += item.totalPrice;
+        });
+
+        const discountType = document.getElementById('discountType').value;
+        const discountInput = document.getElementById('discountValue');
+        let rawVal = parseFloat(discountInput.value);
+
+        if (isNaN(rawVal) || rawVal < 0) {
+            rawVal = 0;
+        }
+
+        let discountAmount = 0;
+
+        if (subtotal === 0) {
+            discountAmount = 0;
+        } else if (discountType === 'percent') {
+            if (rawVal > 100) {
+                rawVal = 100;
+                discountInput.value = 100;
+            }
+            discountAmount = (subtotal * rawVal) / 100;
+        } else if (discountType === 'amount') {
+            if (rawVal > subtotal) {
+                rawVal = subtotal;
+                discountInput.value = subtotal;
+            }
+            discountAmount = rawVal;
+        }
+
+        // עיגול ל-2 ספרות אחרי הנקודה למניעת שגיאות חישוב עשרוניות
+        discountAmount = Math.round(discountAmount * 100) / 100;
+        const finalTotal = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
+
+        return {
+            subtotal: subtotal,
+            discountType: discountType,
+            discountRawValue: rawVal,
+            discountAmount: discountAmount,
+            finalTotal: finalTotal
+        };
+    }
+
     function renderCart() {
         const tbody = document.getElementById('cartTableBody');
         tbody.innerHTML = '';
 
         if (cart.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">הפנקס ריק כרגע</td></tr>';
+            document.getElementById('subtotalRow').style.display = 'none';
+            document.getElementById('discountRow').style.display = 'none';
             document.getElementById('grandTotalDisplay').innerText = '0';
             return;
         }
 
-        let grandTotal = 0;
-
         cart.forEach((item, index) => {
-            grandTotal += item.totalPrice;
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${item.product}</td>
@@ -408,7 +527,19 @@
             tbody.appendChild(tr);
         });
 
-        document.getElementById('grandTotalDisplay').innerText = grandTotal;
+        const totals = calculateTotals();
+
+        if (totals.discountAmount > 0) {
+            document.getElementById('subtotalRow').style.display = 'block';
+            document.getElementById('discountRow').style.display = 'block';
+            document.getElementById('subtotalDisplay').innerText = totals.subtotal;
+            document.getElementById('discountDisplay').innerText = totals.discountAmount;
+        } else {
+            document.getElementById('subtotalRow').style.display = 'none';
+            document.getElementById('discountRow').style.display = 'none';
+        }
+
+        document.getElementById('grandTotalDisplay').innerText = totals.finalTotal;
     }
 
     function submitSale(event) {
@@ -438,12 +569,29 @@
         btn.innerText = 'שולח...';
 
         const sellerName = document.getElementById('sellerName').value;
+        const totals = calculateTotals();
+
+        // הכנת רשימת הפריטים לשליחה, כולל שורת הנחה במידה וניתנה
+        const itemsToSend = [...cart];
+        if (totals.discountAmount > 0) {
+            const discountLabel = totals.discountType === 'percent' 
+                ? `הנחה (${totals.discountRawValue}%)` 
+                : `הנחה (סכום קבוע)`;
+            
+            itemsToSend.push({
+                product: discountLabel,
+                quantity: 1,
+                unitPrice: -totals.discountAmount,
+                totalPrice: -totals.discountAmount,
+                isDiscount: true
+            });
+        }
 
         const formData = new URLSearchParams();
         formData.append('action', 'sale');
         formData.append('sellerName', sellerName);
         formData.append('buyerName', buyerName);
-        formData.append('items', JSON.stringify(cart));
+        formData.append('items', JSON.stringify(itemsToSend));
 
         fetch(scriptURL, {
             method: 'POST',
@@ -457,6 +605,7 @@
             if (data.result === 'success') {
                 successMsg.style.display = 'block';
                 cart = [];
+                document.getElementById('discountValue').value = '0';
                 renderCart();
                 document.getElementById('buyerName').value = '';
                 
