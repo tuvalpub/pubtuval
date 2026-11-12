@@ -7,12 +7,55 @@
     <title>מכירות - פאב תובל</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        .login-form, .sales-form {
+        .section {
+            max-width: 1150px;
+        }
+
+        .login-form {
             display: flex;
             flex-direction: column;
             gap: 15px;
-            max-width: 550px;
+            max-width: 450px;
             margin: 20px auto 0 auto;
+        }
+
+        .sales-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+            margin-top: 20px;
+        }
+
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #ece8df;
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #fdfbf7;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e0dcd3;
+            position: sticky;
+            top: 20px;
+        }
+
+        @media (max-width: 820px) {
+            .sales-form {
+                grid-template-columns: 1fr;
+            }
+            .left-column {
+                position: static;
+            }
         }
 
         .error-message {
@@ -46,21 +89,21 @@
             color: var(--primary-color, #2c4a3e);
         }
 
-        .cart-section, .stock-section {
-            margin-top: 30px;
+        .stock-section {
+            margin-top: 35px;
             border-top: 2px dashed #d5d0c5;
             padding-top: 20px;
         }
 
         .discount-box {
-            margin-top: 15px;
-            padding: 15px;
-            background: #faf8f5;
+            margin-top: 10px;
+            padding: 12px;
+            background: #ffffff;
             border: 1px solid #e0dcd3;
             border-radius: 8px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         .discount-controls {
@@ -78,7 +121,7 @@
         }
 
         .totals-summary {
-            margin-top: 15px;
+            margin-top: 10px;
             background: #f0ebe1;
             color: var(--primary-color, #2c4a3e);
             padding: 15px;
@@ -100,7 +143,7 @@
         }
 
         .grand-total {
-            font-size: 22px;
+            font-size: 23px;
             font-weight: bold;
         }
 
@@ -154,7 +197,7 @@
 
     <!-- אזור מוגן - טופס מכירות וקופה -->
     <div id="protected-content" class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
             <h2 style="margin: 0;">קופת הפאב הקהילתי</h2>
             
             <!-- סקציית הפקת דוח חודשי לפי חודש נבחר -->
@@ -167,49 +210,56 @@
         </div>
         
         <form class="sales-form" onsubmit="submitSale(event)">
-            <div class="form-group">
-                <label for="sellerName">שם המוכר/ת (משמרת):</label>
-                <input type="text" id="sellerName" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+            
+            <!-- צד ימין: פרטי קונה ובחירת מוצרים -->
+            <div class="right-column">
+                <h3 style="margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 8px;">פרטי הזמנה ומוצרים</h3>
+
+                <div class="form-group">
+                    <label for="sellerName">שם המוכר/ת (משמרת):</label>
+                    <input type="text" id="sellerName" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                </div>
+
+                <div class="form-group">
+                    <label for="buyerName">שם הקונה (חבר/ת אגודה):</label>
+                    <input type="text" 
+                           id="buyerName" 
+                           list="membersList" 
+                           placeholder="הקלד שם לחיפוש..." 
+                           autocomplete="off" 
+                           autocorrect="off" 
+                           spellcheck="false" 
+                           required>
+                    <datalist id="membersList">
+                        <!-- הרשימה תטען אוטומטית מהגיליון -->
+                    </datalist>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <label for="productSelect">בחר מוצר מהמלאי:</label>
+                    <select id="productSelect">
+                        <option value="" disabled selected>טוען מוצרים...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">כמות:</label>
+                    <input type="number" id="quantity" value="1" min="1">
+                </div>
+
+                <button type="button" class="btn btn-add" onclick="addToCart()" style="margin-top: 5px;">+ הוסף לפנקס המכירות</button>
             </div>
 
-            <div class="form-group">
-                <label for="buyerName">שם הקונה (חבר/ת אגודה):</label>
-                <input type="text" 
-                       id="buyerName" 
-                       list="membersList" 
-                       placeholder="הקלד שם לחיפוש..." 
-                       autocomplete="off" 
-                       autocorrect="off" 
-                       spellcheck="false" 
-                       required>
-                <datalist id="membersList">
-                    <!-- הרשימה תטען אוטומטית מהגיליון -->
-                </datalist>
-            </div>
-
-            <div class="form-group" style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px;">
-                <label for="productSelect">בחר מוצר מהמלאי:</label>
-                <select id="productSelect">
-                    <option value="" disabled selected>טוען מוצרים...</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="quantity">כמות:</label>
-                <input type="number" id="quantity" value="1" min="1">
-            </div>
-
-            <button type="button" class="btn btn-add" onclick="addToCart()">+ הוסף לפנקס המכירות</button>
-
-            <!-- סל קניות -->
-            <div class="cart-section">
-                <h3>פנקס מכירה נוכחי</h3>
+            <!-- צד שמאל: פנקס מכירות, הנחה וסיכום -->
+            <div class="left-column">
+                <h3 style="margin-bottom: 5px; border-bottom: 1px solid #d5d0c5; padding-bottom: 8px;">פנקס מכירה נוכחי</h3>
+                
                 <table>
                     <thead>
                         <tr>
                             <th>מוצר</th>
                             <th>כמות</th>
-                            <th>מחיר יחידה</th>
+                            <th>מחיר</th>
                             <th>סה"כ</th>
                             <th>פעולה</th>
                         </tr>
@@ -252,9 +302,10 @@
                         סה"כ לתשלום: <span id="grandTotalDisplay">0</span> ₪
                     </div>
                 </div>
+
+                <button type="submit" class="btn" id="submitBtn" style="margin-top: 10px; width: 100%; font-size: 19px;">אישור ושליחת עסקה</button>
             </div>
 
-            <button type="submit" class="btn" id="submitBtn" style="margin-top: 20px; width: 100%; font-size: 19px;">אישור ושליחת עסקה</button>
         </form>
 
         <div id="status-success" class="success-message" style="text-align: center;">העסקה נרשמה בהצלחה והמלאי עודכן!</div>
@@ -490,7 +541,6 @@
             discountAmount = rawVal;
         }
 
-        // עיגול ל-2 ספרות אחרי הנקודה למניעת שגיאות חישוב עשרוניות
         discountAmount = Math.round(discountAmount * 100) / 100;
         const finalTotal = Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100);
 
@@ -571,7 +621,6 @@
         const sellerName = document.getElementById('sellerName').value;
         const totals = calculateTotals();
 
-        // הכנת רשימת הפריטים לשליחה, כולל שורת הנחה במידה וניתנה
         const itemsToSend = [...cart];
         if (totals.discountAmount > 0) {
             const discountLabel = totals.discountType === 'percent' 
